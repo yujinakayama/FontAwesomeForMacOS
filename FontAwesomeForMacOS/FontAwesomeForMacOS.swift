@@ -19,15 +19,9 @@ public extension NSFont {
     /// - parameter fontSize: The preferred font size.
     /// - returns: A UIFont object of FontAwesome.
     public class func fontAwesomeOfSize(_ fontSize: CGFloat) -> NSFont {
-        struct Static {
-            static var onceToken : Int = 0
-        }
-        
         let name = "FontAwesome"
         if NSFont.fontNamesForFamilyName(name).isEmpty {
-            dispatch_once(&Static.onceToken) {
-                FontLoader.loadFont(name)
-            }
+			FontLoader.loadFont(name)
         }
         
         return NSFont(name: name, size: fontSize)!
@@ -100,8 +94,14 @@ public extension NSImage {
 // MARK: - Private
 
 private class FontLoader {
-    class func loadFont(_ name: String) {
-        let bundle = Bundle(for: FontLoader.self)
+	static var loaded = false
+
+	class func loadFont(_ name: String) {
+		if loaded {
+			return
+		}
+
+		let bundle = Bundle(for: FontLoader.self)
         var fontURL = URL()
         let identifier = bundle.bundleIdentifier
         
@@ -118,7 +118,9 @@ private class FontLoader {
         let font = CGFont(provider)!
         
         var error: Unmanaged<CFError>?
-        if !CTFontManagerRegisterGraphicsFont(font, &error) {
+		if CTFontManagerRegisterGraphicsFont(font, &error) {
+			loaded = true
+		} else {
             let errorDescription: CFString = CFErrorCopyDescription(error!.takeUnretainedValue())
             let nsError = error!.takeUnretainedValue() as AnyObject as! NSError
             NSException(name: NSExceptionName.internalInconsistencyException, reason: errorDescription as String, userInfo: [NSUnderlyingErrorKey: nsError]).raise()

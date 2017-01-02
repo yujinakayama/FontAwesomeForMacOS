@@ -102,7 +102,7 @@ private class FontLoader {
 		}
 
 		let bundle = Bundle(for: FontLoader.self)
-        var fontURL = URL()
+		let fontURL: URL
         let identifier = bundle.bundleIdentifier
         
         if identifier?.hasPrefix("org.cocoapods") == true {

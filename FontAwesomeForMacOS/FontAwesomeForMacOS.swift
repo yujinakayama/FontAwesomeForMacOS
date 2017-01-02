@@ -113,9 +113,9 @@ private class FontLoader {
         }
         
         let data = try! Data(contentsOf: fontURL)
-        
-        let provider = CGDataProvider(data: data)
-        let font = CGFont(provider)!
+
+		let provider = CGDataProvider(data: data as NSData as CFData)!
+        let font = CGFont(provider)
         
         var error: Unmanaged<CFError>?
 		if CTFontManagerRegisterGraphicsFont(font, &error) {

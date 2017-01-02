@@ -18,9 +18,9 @@ public extension NSFont {
     ///
     /// - parameter fontSize: The preferred font size.
     /// - returns: A UIFont object of FontAwesome.
-    public class func fontAwesomeOfSize(fontSize: CGFloat) -> NSFont {
+    public class func fontAwesomeOfSize(_ fontSize: CGFloat) -> NSFont {
         struct Static {
-            static var onceToken : dispatch_once_t = 0
+            static var onceToken : Int = 0
         }
         
         let name = "FontAwesome"
@@ -33,12 +33,12 @@ public extension NSFont {
         return NSFont(name: name, size: fontSize)!
     }
     
-    public class func fontNamesForFamilyName(fontName: String) -> [AnyObject] {
-        let members = NSFontManager.sharedFontManager().availableMembersOfFontFamily(fontName)
+    public class func fontNamesForFamilyName(_ fontName: String) -> [AnyObject] {
+        let members = NSFontManager.shared().availableMembers(ofFontFamily: fontName)
         var result: [AnyObject] = []
         
         for array in members! {
-            result.append(array[0])
+            result.append(array[0] as AnyObject)
         }
         
         return result
@@ -52,16 +52,16 @@ public extension String {
     ///
     /// - parameter name: The preferred icon name.
     /// - returns: A string that will appear as icon with FontAwesome.
-    public static func fontAwesomeIconWithName(name: FontAwesome) -> String {
-        return name.rawValue.substringToIndex(name.rawValue.startIndex.advancedBy(1))
+    public static func fontAwesomeIconWithName(_ name: FontAwesome) -> String {
+        return name.rawValue.substring(to: name.rawValue.characters.index(name.rawValue.startIndex, offsetBy: 1))
     }
     
     /// Get a FontAwesome icon string with the given CSS icon code. Icon code can be found here: http://fontawesome.io/icons/
     ///
     /// - parameter code: The preferred icon name.
     /// - returns: A string that will appear as icon with FontAwesome.
-    public static func fontAwesomeIconWithCode(code: String) -> String? {
-        guard let raw = FontAwesomeIcons[code], icon = FontAwesome(rawValue: raw) else {
+    public static func fontAwesomeIconWithCode(_ code: String) -> String? {
+        guard let raw = FontAwesomeIcons[code], let icon = FontAwesome(rawValue: raw) else {
             return nil
         }
         
@@ -79,9 +79,9 @@ public extension NSImage {
     /// - parameter size: The image size.
     /// - parameter backgroundColor: The background color (optional).
     /// - returns: A string that will appear as icon with FontAwesome
-    public static func fontAwesomeIconWithName(name: FontAwesome, textColor: NSColor, size: CGSize, backgroundColor: NSColor = NSColor.clearColor()) -> NSImage {
+    public static func fontAwesomeIconWithName(_ name: FontAwesome, textColor: NSColor, size: CGSize, backgroundColor: NSColor = NSColor.clear) -> NSImage {
         let paragraph = NSMutableParagraphStyle()
-        paragraph.alignment = NSTextAlignment.Center
+        paragraph.alignment = NSTextAlignment.center
         
         // Taken from FontAwesome.io's Fixed Width Icon CSS
         let fontAspectRatio: CGFloat = 1.28571429
@@ -91,7 +91,7 @@ public extension NSImage {
         
         let image = NSImage(size: size)
         image.lockFocus()
-        attributedString.drawInRect(CGRectMake(0, 0, size.width, size.width))
+        attributedString.draw(in: CGRect(x: 0, y: 0, width: size.width, height: size.width))
         image.unlockFocus()
         return image
     }
@@ -100,28 +100,28 @@ public extension NSImage {
 // MARK: - Private
 
 private class FontLoader {
-    class func loadFont(name: String) {
-        let bundle = NSBundle(forClass: FontLoader.self)
-        var fontURL = NSURL()
+    class func loadFont(_ name: String) {
+        let bundle = Bundle(for: FontLoader.self)
+        var fontURL = URL()
         let identifier = bundle.bundleIdentifier
         
         if identifier?.hasPrefix("org.cocoapods") == true {
             // If this framework is added using CocoaPods, resources is placed under a subdirectory
-            fontURL = bundle.URLForResource(name, withExtension: "otf", subdirectory: "FontAwesomeForMacOS.swift.bundle")!
+            fontURL = bundle.url(forResource: name, withExtension: "otf", subdirectory: "FontAwesomeForMacOS.swift.bundle")!
         } else {
-            fontURL = bundle.URLForResource(name, withExtension: "otf")!
+            fontURL = bundle.url(forResource: name, withExtension: "otf")!
         }
         
-        let data = NSData(contentsOfURL: fontURL)!
+        let data = try! Data(contentsOf: fontURL)
         
-        let provider = CGDataProviderCreateWithCFData(data)
-        let font = CGFontCreateWithDataProvider(provider)!
+        let provider = CGDataProvider(data: data)
+        let font = CGFont(provider)!
         
         var error: Unmanaged<CFError>?
         if !CTFontManagerRegisterGraphicsFont(font, &error) {
-            let errorDescription: CFStringRef = CFErrorCopyDescription(error!.takeUnretainedValue())
+            let errorDescription: CFString = CFErrorCopyDescription(error!.takeUnretainedValue())
             let nsError = error!.takeUnretainedValue() as AnyObject as! NSError
-            NSException(name: NSInternalInconsistencyException, reason: errorDescription as String, userInfo: [NSUnderlyingErrorKey: nsError]).raise()
+            NSException(name: NSExceptionName.internalInconsistencyException, reason: errorDescription as String, userInfo: [NSUnderlyingErrorKey: nsError]).raise()
         }
     }
 }
